@@ -19,7 +19,7 @@ export default function EditProfileScreen({ navigation }) {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
+        quality: 0.5,
       });
 
       if (!result.canceled) {
@@ -58,7 +58,9 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const handleUpdate = async () => {
+    if (loading) return;
     setLoading(true);
+    
     try {
       const finalAvatarUrl = await uploadAvatar();
       
@@ -67,11 +69,18 @@ export default function EditProfileScreen({ navigation }) {
         avatar_url: finalAvatarUrl 
       });
 
-      Alert.alert('Success', 'ID Card Updated Successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      Alert.alert(
+        'Success', 
+        'ID Card Updated Successfully', 
+        [{ 
+          text: 'OK', 
+          onPress: () => {
+            navigation.goBack();
+          }
+        }]
+      );
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }

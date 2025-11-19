@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
+  const [role, setRole] = useState('guest');
   const [loading, setLoading] = useState(true);
 
   const fetchRole = async (userId) => {
@@ -23,16 +23,23 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await fetchRole(session.user.id);
-      } else {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          await fetchRole(session.user.id);
+        } else {
+          setUser(null);
+          setRole('guest');
+        }
+      } catch (error) {
         setUser(null);
         setRole('guest');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -60,17 +67,44 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setRole('guest');
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setRole('guest');
+    }
   };
 
   const updateProfile = async (updates) => {
-    const { error } = await supabase.auth.updateUser({
-      data: updates
-    });
-    if (error) throw error;
-    setUser({ ...user, user_metadata: { ...user.user_metadata, ...updates } });
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          username: updates.full_name,
+          avatar_url: updates.avatar_url,
+          updated_at: new Date(),
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      const { data, error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: updates.full_name,
+          avatar_url: updates.avatar_url
+        }
+      });
+
+      if (authError) throw authError;
+
+      if (data.user) {
+        setUser(data.user);
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (

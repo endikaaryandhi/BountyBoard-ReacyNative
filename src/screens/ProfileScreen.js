@@ -8,12 +8,20 @@ export default function ProfileScreen({ navigation }) {
   const { user, role, signOut } = useAuth();
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      Alert.alert('Success', 'Logged out successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to log out');
-    }
+    Alert.alert(
+      'Confirm Resignation',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+          }
+        }
+      ]
+    );
   };
 
   return (
