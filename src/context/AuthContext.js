@@ -27,6 +27,9 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         await fetchRole(session.user.id);
+      } else {
+        setUser(null);
+        setRole(null);
       }
       setLoading(false);
     };
@@ -50,8 +53,28 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  const signIn = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setRole(null);
+  };
+
+  const updateProfile = async (updates) => {
+    const { error } = await supabase.auth.updateUser({
+      data: updates
+    });
+    if (error) throw error;
+    setUser({ ...user, user_metadata: { ...user.user_metadata, ...updates } });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider value={{ user, role, loading, signIn, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

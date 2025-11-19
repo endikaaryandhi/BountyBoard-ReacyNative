@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, RefreshControl, TextInput } from 'react-native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
 
 export default function CapturedListScreen({ navigation }) {
   const [bounties, setBounties] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
 
   const fetchBounties = async () => {
     try {
@@ -30,6 +32,11 @@ export default function CapturedListScreen({ navigation }) {
     setRefreshing(false);
   };
 
+  const filteredBounties = bounties.filter(b => 
+    b.name.toLowerCase().includes(search.toLowerCase()) ||
+    b.crime.toLowerCase().includes(search.toLowerCase())
+  );
+
   const renderItem = ({ item }) => (
     <TouchableOpacity 
       style={[styles.card, { opacity: 0.8 }]} 
@@ -51,13 +58,23 @@ export default function CapturedListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#5D4037" style={styles.searchIcon} />
+        <TextInput 
+          style={styles.searchInput}
+          placeholder="Search logs..."
+          placeholderTextColor="#8D6E63"
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
       <FlatList
-        data={bounties}
+        data={filteredBounties}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5E6C8" />}
-        ListEmptyComponent={<Text style={styles.emptyText}>No captured logs yet.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>No captured logs found.</Text>}
       />
     </View>
   );
@@ -67,6 +84,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#2e2622',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5E6C8',
+    margin: 16,
+    marginBottom: 0,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#5D4037',
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 45,
+    color: '#5D4037',
+    fontWeight: 'bold',
   },
   list: {
     padding: 16,

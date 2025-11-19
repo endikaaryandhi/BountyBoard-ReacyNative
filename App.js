@@ -13,6 +13,8 @@ import AddBountyScreen from './src/screens/AddBountyScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import ApprovalScreen from './src/screens/ApprovalScreen';
+import EditBountyScreen from './src/screens/EditBountyScreen';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -93,6 +95,26 @@ function Navigation() {
             headerStyle: { backgroundColor: '#5D4037' }, 
             headerTintColor: '#F5E6C8',
             headerTitle: 'FILE DETAIL' 
+          }} 
+        />
+        <Stack.Screen 
+          name="EditBounty" 
+          component={EditBountyScreen} 
+          options={{ 
+            headerShown: true, 
+            headerStyle: { backgroundColor: '#5D4037' }, 
+            headerTintColor: '#F5E6C8',
+            headerTitle: 'UPDATE RECORD' 
+          }} 
+        />
+        <Stack.Screen 
+          name="EditProfile" 
+          component={EditProfileScreen} 
+          options={{ 
+            headerShown: true, 
+            headerStyle: { backgroundColor: '#5D4037' }, 
+            headerTintColor: '#F5E6C8',
+            headerTitle: 'UPDATE ID' 
           }} 
         />
       </Stack.Navigator>

@@ -96,7 +96,7 @@ export default function ApprovalScreen({ navigation }) {
         data={bounties}
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={bounties.length === 0 ? styles.centerEmpty : styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5E6C8" />}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
@@ -112,7 +112,8 @@ export default function ApprovalScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#2e2622' },
   list: { padding: 16 },
-  card: { backgroundColor: '#F5E6C8', padding: 12, marginBottom: 20, borderWidth: 1, borderColor: '#5D4037', elevation: 5 },
+  centerEmpty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  card: { backgroundColor: '#F5E6C8', padding: 12, marginBottom: 20, borderWidth: 1, borderColor: '#5D4037', elevation: 5, width: '100%' },
   badgeContainer: { position: 'absolute', top: 10, right: 10, zIndex: 10, backgroundColor: '#FBC02D', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#F57F17' },
   badge: { fontSize: 10, fontWeight: 'bold', color: '#3E2723' },
   image: { width: '100%', height: 200, resizeMode: 'cover', borderWidth: 2, borderColor: '#5D4037', marginBottom: 10 },
@@ -125,6 +126,6 @@ const styles = StyleSheet.create({
   btnReject: { backgroundColor: '#D32F2F' },
   btnApprove: { backgroundColor: '#388E3C' },
   btnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  emptyBox: { alignItems: 'center', marginTop: 50, opacity: 0.7 },
+  emptyBox: { alignItems: 'center', opacity: 0.7 },
   emptyText: { color: '#F5E6C8', marginTop: 10, fontSize: 16 }
 });

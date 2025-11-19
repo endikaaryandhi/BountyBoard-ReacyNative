@@ -2,30 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../config/api';
+import { useAuth } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function DetailScreen({ route, navigation }) {
   const { id } = route.params;
+  const { role } = useAuth();
   const [bounty, setBounty] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchDetails = () => {
+    setLoading(true);
     axios.get(`${API_URL}/${id}`)
       .then(res => setBounty(res.data))
       .catch(err => Alert.alert('Error', 'Could not load bounty details'))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchDetails();
+    }, [id])
+  );
 
   const updateStatus = (newStatus) => {
     axios.put(`${API_URL}/${id}/status`, { status: newStatus })
       .then(() => {
         Alert.alert('Success', newStatus === 'captured' ? 'Target Captured!' : 'Status Updated');
-        navigation.goBack();
+        fetchDetails();
       })
       .catch(() => Alert.alert('Error', 'Failed to update status'));
   };
 
   const deleteBounty = () => {
-    Alert.alert('Confirm', 'Delete this record?', [
+    Alert.alert('Confirm', 'Delete this record permanently?', [
       { text: 'Cancel', style: 'cancel' },
       { 
         text: 'Delete', 
@@ -72,7 +82,7 @@ export default function DetailScreen({ route, navigation }) {
         <Text style={styles.descLabel}>DESCRIPTION:</Text>
         <Text style={styles.description}>{bounty.description}</Text>
 
-        {bounty.status === 'wanted' && (
+        {role === 'admin' && bounty.status === 'wanted' && (
             <TouchableOpacity style={styles.captureBtn} onPress={() => updateStatus('captured')}>
                 <Text style={styles.btnText}>MARK AS CAPTURED</Text>
             </TouchableOpacity>
@@ -84,9 +94,20 @@ export default function DetailScreen({ route, navigation }) {
              </View>
         )}
 
-        <TouchableOpacity style={styles.deleteBtn} onPress={deleteBounty}>
-            <Text style={styles.deleteText}>DELETE RECORD</Text>
-        </TouchableOpacity>
+        {role === 'admin' && (
+            <>
+                <TouchableOpacity 
+                    style={styles.editBtn} 
+                    onPress={() => navigation.navigate('EditBounty', { id: bounty.id })}
+                >
+                    <Text style={styles.editBtnText}>EDIT DOSSIER</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.deleteBtn} onPress={deleteBounty}>
+                    <Text style={styles.deleteText}>DELETE RECORD</Text>
+                </TouchableOpacity>
+            </>
+        )}
       </View>
     </ScrollView>
   );
@@ -109,7 +130,9 @@ const styles = StyleSheet.create({
   description: { backgroundColor: 'rgba(0,0,0,0.05)', padding: 10, borderRadius: 4, marginTop: 5, fontStyle: 'italic', color: '#5D4037' },
   captureBtn: { backgroundColor: '#D32F2F', padding: 15, borderRadius: 4, marginTop: 20, alignItems: 'center', borderWidth: 2, borderColor: 'black' },
   btnText: { color: 'white', fontWeight: 'bold', letterSpacing: 1 },
-  deleteBtn: { marginTop: 10, alignItems: 'center', padding: 10 },
+  editBtn: { marginTop: 15, backgroundColor: '#5D4037', padding: 12, alignItems: 'center', borderRadius: 4 },
+  editBtnText: { color: '#F5E6C8', fontWeight: 'bold' },
+  deleteBtn: { marginTop: 15, alignItems: 'center', padding: 10 },
   deleteText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 12 },
   capturedBadge: { marginTop: 20, padding: 15, borderColor: '#D32F2F', borderWidth: 4, alignItems: 'center', transform: [{rotate: '-2deg'}] },
   badgeText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 20, letterSpacing: 2 }
