@@ -28,6 +28,11 @@ export default function BountyCard({ item, onPress, style }) {
       </View>
 
       <View style={styles.info}>
+        <Text style={styles.nameContainer} numberOfLines={2}>
+          <Text style={styles.name}>{item.name}</Text>
+          {item.alias ? <Text style={styles.alias}> ({item.alias})</Text> : null}
+        </Text>
+        
         <View style={styles.detailRow}>
           <Text style={styles.label}>CRIME:</Text>
           <Text style={styles.crime} numberOfLines={1}>{item.crime}</Text>
@@ -106,6 +111,22 @@ const styles = StyleSheet.create({
   info: {
     padding: 12,
     backgroundColor: '#F5E6C8',
+  },
+  nameContainer: {
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#5D4037',
+    textTransform: 'uppercase',
+  },
+  alias: {
+    fontSize: 18,
+    fontStyle: 'italic',
+    color: '#795548',
+    fontWeight: 'bold',
   },
   detailRow: {
     flexDirection: 'row',

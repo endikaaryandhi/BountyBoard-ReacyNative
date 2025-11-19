@@ -71,12 +71,11 @@ export default function DetailScreen({ route, navigation }) {
             )}
           </View>
           
-          <Text style={styles.name}>{bounty.name}</Text>
+          <Text style={styles.nameContainer}>
+            <Text style={styles.name}>{bounty.name}</Text>
+            {bounty.alias ? <Text style={styles.alias}> ({bounty.alias})</Text> : null}
+          </Text>
           
-          <View style={styles.row}>
-              <Text style={styles.label}>ALIAS</Text>
-              <Text style={styles.value}>{bounty.alias || '-'}</Text>
-          </View>
           <View style={styles.row}>
               <Text style={styles.label}>CRIME</Text>
               <Text style={[styles.value, styles.red]}>{bounty.crime}</Text>
@@ -136,7 +135,9 @@ const styles = StyleSheet.create({
   grayscale: { opacity: 0.5 },
   stampContainer: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
   stamp: { color: '#D32F2F', fontSize: 36, fontWeight: '900', borderWidth: 5, borderColor: '#D32F2F', padding: 10, transform: [{ rotate: '-15deg' }], letterSpacing: 2, backgroundColor: 'rgba(245, 230, 200, 0.9)' },
-  name: { fontSize: 28, fontWeight: '900', color: '#5D4037', textAlign: 'center', marginBottom: 20, textTransform: 'uppercase', borderBottomWidth: 4, borderBottomColor: '#5D4037' },
+  nameContainer: { textAlign: 'center', marginBottom: 20, borderBottomWidth: 4, borderBottomColor: '#5D4037', paddingBottom: 10 },
+  name: { fontSize: 28, fontWeight: '900', color: '#5D4037', textTransform: 'uppercase' },
+  alias: { fontSize: 20, fontWeight: 'bold', color: '#795548', fontStyle: 'italic' },
   row: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(93,64,55,0.2)', paddingVertical: 8 },
   label: { fontWeight: 'bold', color: '#5D4037', opacity: 0.7 },
   value: { fontWeight: 'bold', color: '#5D4037', maxWidth: '60%', textAlign: 'right' },
