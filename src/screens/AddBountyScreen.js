@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import * as ImagePicker from 'expo-image-picker';
 import { API_URL } from '../config/api';
+import { supabase } from '../config/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 export default function AddBountyScreen({ navigation }) {
+  const { role } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imageUri, setImageUri] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     alias: '',
@@ -12,9 +20,61 @@ export default function AddBountyScreen({ navigation }) {
     last_seen: '',
     description: '',
     image_url: '',
-    status: 'wanted'
+    status: role === 'admin' ? 'wanted' : 'pending'
   });
-  const [loading, setLoading] = useState(false);
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setImageUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!imageUri) return '';
+
+    try {
+      setUploading(true);
+      const ext = imageUri.substring(imageUri.lastIndexOf('.') + 1);
+      const fileName = `bounty-${Date.now()}.${ext}`;
+      
+      const formData = new FormData();
+      formData.append('file', {
+        uri: imageUri,
+        name: fileName,
+        type: `image/${ext}`
+      });
+
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, formData, {
+          contentType: `image/${ext}`,
+        });
+
+      if (error) throw error;
+
+      const { data: publicData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      return publicData.publicUrl;
+    } catch (error) {
+      Alert.alert('Upload Failed', error.message);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleChange = (key, value) => {
     setFormData({ ...formData, [key]: value });
@@ -22,16 +82,36 @@ export default function AddBountyScreen({ navigation }) {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.crime || !formData.bounty_amount) {
-      Alert.alert('Error', 'Please fill required fields');
+      Alert.alert('Error', 'Please fill required fields (Name, Crime, Reward)');
       return;
     }
     
     setLoading(true);
     try {
-      await axios.post(API_URL, formData);
-      Alert.alert('Success', 'Bounty posted successfully!');
-      setFormData({ name: '', alias: '', crime: '', bounty_amount: '', last_seen: '', description: '', image_url: '', status: 'wanted' });
-      navigation.navigate('Wanted');
+      let finalImageUrl = formData.image_url;
+      
+      if (imageUri) {
+        const uploadedUrl = await uploadImage();
+        if (!uploadedUrl) {
+          setLoading(false);
+          return;
+        }
+        finalImageUrl = uploadedUrl;
+      }
+
+      await axios.post(API_URL, { ...formData, image_url: finalImageUrl });
+      
+      Alert.alert('Success', 'Bounty posted successfully!', [
+        { text: 'OK', onPress: () => navigation.navigate('Wanted') }
+      ]);
+      
+      setFormData({
+        name: '', alias: '', crime: '', bounty_amount: '', 
+        last_seen: '', description: '', image_url: '', 
+        status: role === 'admin' ? 'wanted' : 'pending'
+      });
+      setImageUri(null);
+
     } catch (error) {
       Alert.alert('Error', 'Failed to post bounty');
     } finally {
@@ -44,23 +124,33 @@ export default function AddBountyScreen({ navigation }) {
       <View style={styles.formCard}>
         <Text style={styles.title}>NEW BOUNTY</Text>
         
+        <View style={styles.imageSection}>
+          <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="camera" size={40} color="#5D4037" style={{opacity: 0.5}} />
+                <Text style={styles.imageText}>TAP TO UPLOAD</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <Text style={styles.label}>Target Name *</Text>
-        <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} />
+        <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} placeholder="Full Name" placeholderTextColor="#8D6E63"/>
 
         <Text style={styles.label}>Alias</Text>
-        <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} />
+        <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} placeholder="Nickname" placeholderTextColor="#8D6E63"/>
 
         <Text style={styles.label}>Crime *</Text>
-        <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} />
+        <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} placeholder="Main Offense" placeholderTextColor="#8D6E63"/>
 
         <Text style={styles.label}>Reward Amount ($) *</Text>
-        <TextInput style={styles.input} value={formData.bounty_amount} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" />
+        <TextInput style={styles.input} value={formData.bounty_amount} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" placeholder="0" placeholderTextColor="#8D6E63"/>
 
-        <Text style={styles.label}>Last Seen Location</Text>
-        <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} />
-
-        <Text style={styles.label}>Image URL</Text>
-        <TextInput style={styles.input} value={formData.image_url} onChangeText={v => handleChange('image_url', v)} placeholder="https://..." placeholderTextColor="#5D4037AA" />
+        <Text style={styles.label}>Last Seen</Text>
+        <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} placeholder="Location" placeholderTextColor="#8D6E63"/>
 
         <Text style={styles.label}>Description</Text>
         <TextInput 
@@ -69,10 +159,16 @@ export default function AddBountyScreen({ navigation }) {
           onChangeText={v => handleChange('description', v)} 
           multiline={true} 
           numberOfLines={4} 
+          placeholder="Physical traits, dangerous, etc."
+          placeholderTextColor="#8D6E63"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'POSTING...' : 'PUBLISH BOUNTY'}</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading || uploading}>
+          {loading || uploading ? (
+            <ActivityIndicator color="#F5E6C8" />
+          ) : (
+            <Text style={styles.buttonText}>{role === 'admin' ? 'PUBLISH NOW' : 'SUBMIT REQUEST'}</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -80,59 +176,17 @@ export default function AddBountyScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#2e2622',
-    padding: 16,
-  },
-  formCard: {
-    backgroundColor: '#F5E6C8',
-    padding: 20,
-    borderRadius: 4,
-    borderWidth: 4,
-    borderColor: '#5D4037',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#5D4037',
-    textAlign: 'center',
-    marginBottom: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: '#5D4037',
-    paddingBottom: 10,
-  },
-  label: {
-    color: '#5D4037',
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  input: {
-    backgroundColor: 'rgba(93, 64, 55, 0.1)',
-    borderBottomWidth: 2,
-    borderBottomColor: '#5D4037',
-    marginBottom: 15,
-    padding: 8,
-    color: '#5D4037',
-    fontWeight: 'bold',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  button: {
-    backgroundColor: '#5D4037',
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 10,
-    elevation: 3,
-  },
-  buttonText: {
-    color: '#F5E6C8',
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  }
+  container: { flex: 1, backgroundColor: '#2e2622', padding: 16 },
+  formCard: { backgroundColor: '#F5E6C8', padding: 20, borderRadius: 4, borderWidth: 4, borderColor: '#5D4037', marginBottom: 40 },
+  title: { fontSize: 24, fontWeight: '900', color: '#5D4037', textAlign: 'center', marginBottom: 20, borderBottomWidth: 2, borderBottomColor: '#5D4037', paddingBottom: 10 },
+  imageSection: { alignItems: 'center', marginBottom: 20 },
+  imageContainer: { width: 120, height: 160, backgroundColor: '#D7CCC8', borderWidth: 2, borderColor: '#5D4037', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  imagePreview: { width: '100%', height: '100%' },
+  imagePlaceholder: { alignItems: 'center' },
+  imageText: { fontSize: 10, fontWeight: 'bold', color: '#5D4037', marginTop: 5 },
+  label: { color: '#5D4037', fontWeight: 'bold', marginBottom: 5, fontSize: 12, textTransform: 'uppercase' },
+  input: { backgroundColor: 'rgba(93, 64, 55, 0.1)', borderBottomWidth: 2, borderBottomColor: '#5D4037', marginBottom: 15, padding: 8, color: '#5D4037', fontWeight: 'bold' },
+  textArea: { height: 80, textAlignVertical: 'top' },
+  button: { backgroundColor: '#5D4037', padding: 15, alignItems: 'center', marginTop: 10, elevation: 3, flexDirection: 'row', justifyContent: 'center' },
+  buttonText: { color: '#F5E6C8', fontWeight: 'bold', letterSpacing: 1 }
 });
