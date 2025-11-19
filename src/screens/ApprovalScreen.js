@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '../config/api';
+import BountyCard from '../components/BountyCard';
 
 export default function ApprovalScreen({ navigation }) {
   const [bounties, setBounties] = useState([]);
@@ -54,38 +55,30 @@ export default function ApprovalScreen({ navigation }) {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.badgeContainer}>
-        <Text style={styles.badge}>PENDING REVIEW</Text>
-      </View>
-      
-      <Image 
-        source={{ uri: item.image_url || 'https://placehold.co/400x500/2e2622/F5E6C8?text=EVIDENCE' }} 
-        style={styles.image} 
-      />
-      
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.crime}>{item.crime}</Text>
-        <Text style={styles.reward}>$ {parseInt(item.bounty_amount).toLocaleString()}</Text>
+    <View style={styles.wrapper}>
+      <View style={styles.actionButtons}>
+         <TouchableOpacity 
+           style={[styles.btn, styles.btnReject]} 
+           onPress={() => handleAction(item.id, 'rejected')}
+         >
+            <Ionicons name="close" size={28} color="white" />
+         </TouchableOpacity>
+         
+         <TouchableOpacity 
+           style={[styles.btn, styles.btnApprove]} 
+           onPress={() => handleAction(item.id, 'wanted')}
+         >
+            <Ionicons name="checkmark" size={28} color="white" />
+         </TouchableOpacity>
       </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={[styles.btn, styles.btnReject]} 
-          onPress={() => handleAction(item.id, 'rejected')}
-        >
-          <Ionicons name="close-circle" size={24} color="white" />
-          <Text style={styles.btnText}>REJECT</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.btn, styles.btnApprove]} 
-          onPress={() => handleAction(item.id, 'wanted')}
-        >
-          <Ionicons name="checkmark-circle" size={24} color="white" />
-          <Text style={styles.btnText}>APPROVE</Text>
-        </TouchableOpacity>
+      <BountyCard item={item} onPress={null} />
+      
+      <View style={styles.badgeContainer}>
+         <View style={styles.badge}>
+           <Ionicons name="alert-circle" size={16} color="white" style={{marginRight: 4}}/>
+           <Text style={styles.badgeText}>PENDING REVIEW</Text>
+         </View>
       </View>
     </View>
   );
@@ -100,8 +93,9 @@ export default function ApprovalScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5E6C8" />}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Ionicons name="checkmark-done-circle-outline" size={64} color="#5D4037" />
-            <Text style={styles.emptyText}>No pending requests.</Text>
+            <Ionicons name="checkmark-done-circle-outline" size={80} color="#5D4037" />
+            <Text style={styles.emptyText}>All caught up!</Text>
+            <Text style={styles.emptySubText}>No pending requests.</Text>
           </View>
         }
       />
@@ -111,21 +105,57 @@ export default function ApprovalScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#2e2622' },
-  list: { padding: 16 },
+  list: { padding: 16, paddingTop: 30 },
   centerEmpty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  card: { backgroundColor: '#F5E6C8', padding: 12, marginBottom: 20, borderWidth: 1, borderColor: '#5D4037', elevation: 5, width: '100%' },
-  badgeContainer: { position: 'absolute', top: 10, right: 10, zIndex: 10, backgroundColor: '#FBC02D', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#F57F17' },
-  badge: { fontSize: 10, fontWeight: 'bold', color: '#3E2723' },
-  image: { width: '100%', height: 200, resizeMode: 'cover', borderWidth: 2, borderColor: '#5D4037', marginBottom: 10 },
-  info: { alignItems: 'center', marginBottom: 15 },
-  name: { fontSize: 20, fontWeight: 'bold', color: '#5D4037', textTransform: 'uppercase' },
-  crime: { fontSize: 14, color: '#D32F2F', fontWeight: 'bold', marginBottom: 5 },
-  reward: { fontSize: 18, fontWeight: '900', color: '#5D4037' },
-  actions: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  btn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, borderRadius: 4, gap: 5 },
+  wrapper: { position: 'relative', marginBottom: 20 },
+  actionButtons: {
+    position: 'absolute',
+    top: -15,
+    right: -10,
+    flexDirection: 'row',
+    zIndex: 20,
+    gap: 10,
+  },
+  btn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+  },
   btnReject: { backgroundColor: '#D32F2F' },
   btnApprove: { backgroundColor: '#388E3C' },
-  btnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  emptyBox: { alignItems: 'center', opacity: 0.7 },
-  emptyText: { color: '#F5E6C8', marginTop: 10, fontSize: 16 }
+  badgeContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9A825',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  emptyBox: { alignItems: 'center', opacity: 0.6 },
+  emptyText: { color: '#F5E6C8', marginTop: 10, fontSize: 24, fontWeight: 'bold', fontFamily: 'serif' },
+  emptySubText: { color: '#F5E6C8', marginTop: 5, fontSize: 16, fontStyle: 'italic' }
 });
