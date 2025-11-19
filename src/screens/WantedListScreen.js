@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, RefreshControl, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +40,7 @@ export default function WantedListScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#5D4037" style={styles.searchIcon} />
         <TextInput 
@@ -63,7 +64,7 @@ export default function WantedListScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F5E6C8" />}
         ListEmptyComponent={<Text style={styles.emptyText}>No active bounties found.</Text>}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

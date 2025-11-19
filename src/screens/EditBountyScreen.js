@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { API_URL } from '../config/api';
@@ -95,63 +96,66 @@ export default function EditBountyScreen({ route, navigation }) {
     }
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#F5E6C8" /></View>;
+  if (loading) return <SafeAreaView style={styles.center}><ActivityIndicator size="large" color="#F5E6C8" /></SafeAreaView>;
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.formCard}>
-        <Text style={styles.title}>EDIT DOSSIER</Text>
-        
-        <View style={styles.imageSection}>
-          <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
-            <Image 
-              source={{ uri: imageUri || formData.image_url || 'https://placehold.co/400x500' }} 
-              style={styles.imagePreview} 
-            />
-            <View style={styles.editOverlay}>
-              <Ionicons name="camera" size={20} color="#F5E6C8" />
-            </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.formCard}>
+          <Text style={styles.title}>EDIT DOSSIER</Text>
+          
+          <View style={styles.imageSection}>
+            <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
+              <Image 
+                source={{ uri: imageUri || formData.image_url || 'https://placehold.co/400x500' }} 
+                style={styles.imagePreview} 
+              />
+              <View style={styles.editOverlay}>
+                <Ionicons name="camera" size={20} color="#F5E6C8" />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.label}>Target Name</Text>
+          <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} />
+
+          <Text style={styles.label}>Alias</Text>
+          <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} />
+
+          <Text style={styles.label}>Crime</Text>
+          <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} />
+
+          <Text style={styles.label}>Reward Amount ($)</Text>
+          <TextInput style={styles.input} value={String(formData.bounty_amount)} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" />
+
+          <Text style={styles.label}>Last Seen Location</Text>
+          <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} />
+
+          <Text style={styles.label}>Description</Text>
+          <TextInput 
+            style={[styles.input, styles.textArea]} 
+            value={formData.description} 
+            onChangeText={v => handleChange('description', v)} 
+            multiline={true} 
+            numberOfLines={4} 
+          />
+
+          <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={submitting}>
+            {submitting ? (
+              <ActivityIndicator color="#F5E6C8" />
+            ) : (
+              <Text style={styles.buttonText}>SAVE CHANGES</Text>
+            )}
           </TouchableOpacity>
         </View>
-
-        <Text style={styles.label}>Target Name</Text>
-        <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} />
-
-        <Text style={styles.label}>Alias</Text>
-        <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} />
-
-        <Text style={styles.label}>Crime</Text>
-        <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} />
-
-        <Text style={styles.label}>Reward Amount ($)</Text>
-        <TextInput style={styles.input} value={String(formData.bounty_amount)} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" />
-
-        <Text style={styles.label}>Last Seen Location</Text>
-        <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} />
-
-        <Text style={styles.label}>Description</Text>
-        <TextInput 
-          style={[styles.input, styles.textArea]} 
-          value={formData.description} 
-          onChangeText={v => handleChange('description', v)} 
-          multiline={true} 
-          numberOfLines={4} 
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={submitting}>
-          {submitting ? (
-            <ActivityIndicator color="#F5E6C8" />
-          ) : (
-            <Text style={styles.buttonText}>SAVE CHANGES</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#2e2622', padding: 16 },
+  container: { flex: 1, backgroundColor: '#2e2622' },
+  scrollContent: { padding: 16 },
   center: { flex: 1, backgroundColor: '#2e2622', justifyContent: 'center', alignItems: 'center' },
   formCard: { backgroundColor: '#F5E6C8', padding: 20, borderRadius: 4, borderWidth: 4, borderColor: '#5D4037', marginBottom: 40 },
   title: { fontSize: 24, fontWeight: '900', color: '#5D4037', textAlign: 'center', marginBottom: 20, borderBottomWidth: 2, borderBottomColor: '#5D4037', paddingBottom: 10 },

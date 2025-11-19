@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,7 +85,7 @@ export default function ApprovalScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={bounties}
         renderItem={renderItem}
@@ -99,7 +100,7 @@ export default function ApprovalScreen({ navigation }) {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

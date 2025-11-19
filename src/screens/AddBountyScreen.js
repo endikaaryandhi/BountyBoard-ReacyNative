@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { API_URL } from '../config/api';
@@ -120,63 +121,66 @@ export default function AddBountyScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.formCard}>
-        <Text style={styles.title}>NEW BOUNTY</Text>
-        
-        <View style={styles.imageSection}>
-          <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.formCard}>
+          <Text style={styles.title}>NEW BOUNTY</Text>
+          
+          <View style={styles.imageSection}>
+            <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
+              {imageUri ? (
+                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Ionicons name="camera" size={40} color="#5D4037" style={{opacity: 0.5}} />
+                  <Text style={styles.imageText}>TAP TO UPLOAD</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.label}>Target Name *</Text>
+          <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} placeholder="Full Name" placeholderTextColor="#8D6E63"/>
+
+          <Text style={styles.label}>Alias</Text>
+          <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} placeholder="Nickname" placeholderTextColor="#8D6E63"/>
+
+          <Text style={styles.label}>Crime *</Text>
+          <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} placeholder="Main Offense" placeholderTextColor="#8D6E63"/>
+
+          <Text style={styles.label}>Reward Amount ($) *</Text>
+          <TextInput style={styles.input} value={formData.bounty_amount} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" placeholder="0" placeholderTextColor="#8D6E63"/>
+
+          <Text style={styles.label}>Last Seen</Text>
+          <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} placeholder="Location" placeholderTextColor="#8D6E63"/>
+
+          <Text style={styles.label}>Description</Text>
+          <TextInput 
+            style={[styles.input, styles.textArea]} 
+            value={formData.description} 
+            onChangeText={v => handleChange('description', v)} 
+            multiline={true} 
+            numberOfLines={4} 
+            placeholder="Physical traits, dangerous, etc."
+            placeholderTextColor="#8D6E63"
+          />
+
+          <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading || uploading}>
+            {loading || uploading ? (
+              <ActivityIndicator color="#F5E6C8" />
             ) : (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="camera" size={40} color="#5D4037" style={{opacity: 0.5}} />
-                <Text style={styles.imageText}>TAP TO UPLOAD</Text>
-              </View>
+              <Text style={styles.buttonText}>{role === 'admin' ? 'PUBLISH NOW' : 'SUBMIT REQUEST'}</Text>
             )}
           </TouchableOpacity>
         </View>
-
-        <Text style={styles.label}>Target Name *</Text>
-        <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} placeholder="Full Name" placeholderTextColor="#8D6E63"/>
-
-        <Text style={styles.label}>Alias</Text>
-        <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} placeholder="Nickname" placeholderTextColor="#8D6E63"/>
-
-        <Text style={styles.label}>Crime *</Text>
-        <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} placeholder="Main Offense" placeholderTextColor="#8D6E63"/>
-
-        <Text style={styles.label}>Reward Amount ($) *</Text>
-        <TextInput style={styles.input} value={formData.bounty_amount} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" placeholder="0" placeholderTextColor="#8D6E63"/>
-
-        <Text style={styles.label}>Last Seen</Text>
-        <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} placeholder="Location" placeholderTextColor="#8D6E63"/>
-
-        <Text style={styles.label}>Description</Text>
-        <TextInput 
-          style={[styles.input, styles.textArea]} 
-          value={formData.description} 
-          onChangeText={v => handleChange('description', v)} 
-          multiline={true} 
-          numberOfLines={4} 
-          placeholder="Physical traits, dangerous, etc."
-          placeholderTextColor="#8D6E63"
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading || uploading}>
-          {loading || uploading ? (
-            <ActivityIndicator color="#F5E6C8" />
-          ) : (
-            <Text style={styles.buttonText}>{role === 'admin' ? 'PUBLISH NOW' : 'SUBMIT REQUEST'}</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#2e2622', padding: 16 },
+  container: { flex: 1, backgroundColor: '#2e2622' },
+  scrollContent: { padding: 16 },
   formCard: { backgroundColor: '#F5E6C8', padding: 20, borderRadius: 4, borderWidth: 4, borderColor: '#5D4037', marginBottom: 40 },
   title: { fontSize: 24, fontWeight: '900', color: '#5D4037', textAlign: 'center', marginBottom: 20, borderBottomWidth: 2, borderBottomColor: '#5D4037', paddingBottom: 10 },
   imageSection: { alignItems: 'center', marginBottom: 20 },

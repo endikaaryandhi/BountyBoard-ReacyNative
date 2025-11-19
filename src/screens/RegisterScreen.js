@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../config/supabase';
 
 export default function RegisterScreen({ navigation }) {
@@ -23,7 +24,7 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>NEW LICENSE</Text>
         <TextInput
@@ -49,7 +50,7 @@ export default function RegisterScreen({ navigation }) {
           <Text style={styles.link}>Back to Login</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -58,7 +59,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2e2622',
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
   card: {

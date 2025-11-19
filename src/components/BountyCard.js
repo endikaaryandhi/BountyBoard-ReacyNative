@@ -12,7 +12,7 @@ export default function BountyCard({ item, onPress, style }) {
       disabled={!onPress}
     >
       <View style={styles.header}>
-        <Text style={styles.headerText}>{isCaptured ? 'CASE CLOSED' : 'WANTED'}</Text>
+        <Text style={styles.headerText}>{item.name}</Text>
       </View>
       
       <View style={styles.imageContainer}>
@@ -22,18 +22,15 @@ export default function BountyCard({ item, onPress, style }) {
         />
         {isCaptured && (
           <View style={styles.stampContainer}>
-            <Text style={styles.stamp}>CAPTURED</Text>
+            <Text style={styles.stamp}>CASE CLOSED</Text>
           </View>
         )}
       </View>
 
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-        {item.alias ? <Text style={styles.alias}>"{item.alias}"</Text> : null}
-        
         <View style={styles.detailRow}>
           <Text style={styles.label}>CRIME:</Text>
-          <Text style={styles.crime} numberOfLines={2}>{item.crime}</Text>
+          <Text style={styles.crime} numberOfLines={1}>{item.crime}</Text>
         </View>
         
         <View style={styles.detailRow}>
@@ -53,10 +50,6 @@ const styles = StyleSheet.create({
     borderColor: '#5D4037',
     marginBottom: 20,
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
   },
   cardCaptured: {
     opacity: 0.9,
@@ -64,15 +57,16 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#5D4037',
     paddingVertical: 8,
+    paddingHorizontal: 10,
     alignItems: 'center',
     borderBottomWidth: 2,
     borderBottomColor: '#3E2723',
   },
   headerText: {
     color: '#F5E6C8',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 4,
+    letterSpacing: 1,
     textTransform: 'uppercase',
   },
   imageContainer: {
@@ -89,7 +83,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   imageCaptured: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   stampContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -99,54 +93,40 @@ const styles = StyleSheet.create({
   },
   stamp: {
     color: '#D32F2F',
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '900',
-    borderWidth: 6,
+    borderWidth: 5,
     borderColor: '#D32F2F',
     paddingHorizontal: 10,
     paddingVertical: 5,
     transform: [{ rotate: '-15deg' }],
-    letterSpacing: 3,
-    backgroundColor: 'rgba(245, 230, 200, 0.8)', 
+    letterSpacing: 2,
+    backgroundColor: 'rgba(245, 230, 200, 0.9)', 
   },
   info: {
-    padding: 15,
-    alignItems: 'center',
+    padding: 12,
     backgroundColor: '#F5E6C8',
   },
-  name: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#5D4037',
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  alias: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    color: '#795548',
-    marginBottom: 12,
-  },
   detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   label: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#5D4037',
-    opacity: 0.7,
-    textTransform: 'uppercase',
+    opacity: 0.8,
   },
   crime: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#D32F2F',
-    textAlign: 'center',
+    maxWidth: '70%',
   },
   reward: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: '900',
     color: '#5D4037',
   },

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
@@ -49,87 +50,92 @@ export default function DetailScreen({ route, navigation }) {
     ]);
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#F5E6C8" /></View>;
-  if (!bounty) return <View style={styles.center}><Text style={styles.text}>Not Found</Text></View>;
+  if (loading) return <SafeAreaView style={styles.center}><ActivityIndicator size="large" color="#F5E6C8" /></SafeAreaView>;
+  if (!bounty) return <SafeAreaView style={styles.center}><Text style={styles.text}>Not Found</Text></SafeAreaView>;
+
+  const isCaptured = bounty.status === 'captured';
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.paper}>
-        <Image 
-          source={{ uri: bounty.image_url || 'https://placehold.co/400x500/2e2622/F5E6C8?text=CONFIDENTIAL' }} 
-          style={[styles.image, bounty.status === 'captured' && styles.grayscale]} 
-        />
-        
-        <Text style={styles.name}>{bounty.name}</Text>
-        
-        <View style={styles.row}>
-            <Text style={styles.label}>ALIAS</Text>
-            <Text style={styles.value}>{bounty.alias || '-'}</Text>
-        </View>
-        <View style={styles.row}>
-            <Text style={styles.label}>CRIME</Text>
-            <Text style={[styles.value, styles.red]}>{bounty.crime}</Text>
-        </View>
-        <View style={styles.row}>
-            <Text style={styles.label}>REWARD</Text>
-            <Text style={styles.reward}>$ {parseInt(bounty.bounty_amount).toLocaleString()}</Text>
-        </View>
-        <View style={styles.row}>
-            <Text style={styles.label}>LAST SEEN</Text>
-            <Text style={styles.value}>{bounty.last_seen}</Text>
-        </View>
-        
-        <Text style={styles.descLabel}>DESCRIPTION:</Text>
-        <Text style={styles.description}>{bounty.description}</Text>
-
-        {role === 'admin' && (
-          <>
-            {bounty.status === 'wanted' && (
-              <TouchableOpacity style={styles.captureBtn} onPress={() => updateStatus('captured')}>
-                  <Text style={styles.btnText}>MARK AS CAPTURED</Text>
-              </TouchableOpacity>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.paper}>
+          <View style={styles.imageWrapper}>
+            <Image 
+              source={{ uri: bounty.image_url || 'https://placehold.co/400x500/2e2622/F5E6C8?text=CONFIDENTIAL' }} 
+              style={[styles.image, isCaptured && styles.grayscale]} 
+            />
+            {isCaptured && (
+              <View style={styles.stampContainer}>
+                <Text style={styles.stamp}>CASE CLOSED</Text>
+              </View>
             )}
+          </View>
+          
+          <Text style={styles.name}>{bounty.name}</Text>
+          
+          <View style={styles.row}>
+              <Text style={styles.label}>ALIAS</Text>
+              <Text style={styles.value}>{bounty.alias || '-'}</Text>
+          </View>
+          <View style={styles.row}>
+              <Text style={styles.label}>CRIME</Text>
+              <Text style={[styles.value, styles.red]}>{bounty.crime}</Text>
+          </View>
+          <View style={styles.row}>
+              <Text style={styles.label}>REWARD</Text>
+              <Text style={styles.reward}>$ {parseInt(bounty.bounty_amount).toLocaleString()}</Text>
+          </View>
+          <View style={styles.row}>
+              <Text style={styles.label}>LAST SEEN</Text>
+              <Text style={styles.value}>{bounty.last_seen}</Text>
+          </View>
+          
+          <Text style={styles.descLabel}>DESCRIPTION:</Text>
+          <Text style={styles.description}>{bounty.description}</Text>
 
-            {bounty.status === 'captured' && (
-              <TouchableOpacity style={styles.revokeBtn} onPress={() => updateStatus('wanted')}>
-                  <Text style={styles.btnText}>REVOKE CAPTURE</Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-        
-        {bounty.status === 'captured' && (
-             <View style={styles.capturedBadge}>
-                 <Text style={styles.badgeText}>CASE CLOSED</Text>
-             </View>
-        )}
-
-        {role === 'admin' && (
+          {role === 'admin' && (
             <>
-                <TouchableOpacity 
-                    style={styles.editBtn} 
-                    onPress={() => navigation.navigate('EditBounty', { id: bounty.id })}
-                >
-                    <Text style={styles.editBtnText}>EDIT DOSSIER</Text>
+              {bounty.status === 'wanted' && (
+                <TouchableOpacity style={styles.captureBtn} onPress={() => updateStatus('captured')}>
+                    <Text style={styles.btnText}>MARK AS CAPTURED</Text>
                 </TouchableOpacity>
+              )}
 
-                <TouchableOpacity style={styles.deleteBtn} onPress={deleteBounty}>
-                    <Text style={styles.deleteText}>DELETE RECORD</Text>
+              {bounty.status === 'captured' && (
+                <TouchableOpacity style={styles.revokeBtn} onPress={() => updateStatus('wanted')}>
+                    <Text style={styles.btnText}>REVOKE CAPTURE</Text>
                 </TouchableOpacity>
+              )}
+
+              <TouchableOpacity 
+                  style={styles.editBtn} 
+                  onPress={() => navigation.navigate('EditBounty', { id: bounty.id })}
+              >
+                  <Text style={styles.editBtnText}>EDIT DOSSIER</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.deleteBtn} onPress={deleteBounty}>
+                  <Text style={styles.deleteText}>DELETE RECORD</Text>
+              </TouchableOpacity>
             </>
-        )}
-      </View>
-    </ScrollView>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#2e2622', padding: 16 },
+  container: { flex: 1, backgroundColor: '#2e2622' },
+  scrollContent: { padding: 16 },
   center: { flex: 1, backgroundColor: '#2e2622', justifyContent: 'center', alignItems: 'center' },
   text: { color: '#F5E6C8' },
-  paper: { backgroundColor: '#F5E6C8', padding: 20, borderRadius: 4, borderWidth: 4, borderColor: '#5D4037', marginBottom: 40 },
-  image: { width: '100%', height: 300, resizeMode: 'cover', borderWidth: 2, borderColor: '#5D4037', marginBottom: 20 },
+  paper: { backgroundColor: '#F5E6C8', padding: 20, borderRadius: 4, borderWidth: 4, borderColor: '#5D4037', marginBottom: 20 },
+  imageWrapper: { position: 'relative', marginBottom: 20 },
+  image: { width: '100%', height: 300, resizeMode: 'cover', borderWidth: 2, borderColor: '#5D4037' },
   grayscale: { opacity: 0.5 },
+  stampContainer: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  stamp: { color: '#D32F2F', fontSize: 36, fontWeight: '900', borderWidth: 5, borderColor: '#D32F2F', padding: 10, transform: [{ rotate: '-15deg' }], letterSpacing: 2, backgroundColor: 'rgba(245, 230, 200, 0.9)' },
   name: { fontSize: 28, fontWeight: '900', color: '#5D4037', textAlign: 'center', marginBottom: 20, textTransform: 'uppercase', borderBottomWidth: 4, borderBottomColor: '#5D4037' },
   row: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(93,64,55,0.2)', paddingVertical: 8 },
   label: { fontWeight: 'bold', color: '#5D4037', opacity: 0.7 },
@@ -144,7 +150,5 @@ const styles = StyleSheet.create({
   editBtn: { marginTop: 15, backgroundColor: '#5D4037', padding: 12, alignItems: 'center', borderRadius: 4 },
   editBtnText: { color: '#F5E6C8', fontWeight: 'bold' },
   deleteBtn: { marginTop: 15, alignItems: 'center', padding: 10 },
-  deleteText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 12 },
-  capturedBadge: { marginTop: 20, padding: 15, borderColor: '#D32F2F', borderWidth: 4, alignItems: 'center', transform: [{rotate: '-2deg'}] },
-  badgeText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 20, letterSpacing: 2 }
+  deleteText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 12 }
 });
