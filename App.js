@@ -12,11 +12,21 @@ import CapturedListScreen from './src/screens/CapturedListScreen';
 import AddBountyScreen from './src/screens/AddBountyScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import DetailScreen from './src/screens/DetailScreen';
+import ApprovalScreen from './src/screens/ApprovalScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function MainTabNavigator() {
+function MainTabNavigator({ navigation }) {
+  const { user, role } = useAuth();
+
+  const handleAuthGuard = (e) => {
+    if (!user) {
+      e.preventDefault();
+      navigation.navigate('Login');
+    }
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -36,46 +46,55 @@ function MainTabNavigator() {
           else if (route.name === 'Captured') iconName = focused ? 'document-text' : 'document-text-outline';
           else if (route.name === 'Add') iconName = focused ? 'add-circle' : 'add-circle-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+          else if (route.name === 'Approval') iconName = focused ? 'shield-checkmark' : 'shield-checkmark-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Wanted" component={WantedListScreen} />
+      
       <Tab.Screen name="Captured" component={CapturedListScreen} />
-      <Tab.Screen name="Add" component={AddBountyScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      
+      <Tab.Screen 
+        name="Add" 
+        component={AddBountyScreen} 
+        listeners={{ tabPress: handleAuthGuard }}
+      />
+
+      {user && role === 'admin' && (
+        <Tab.Screen name="Approval" component={ApprovalScreen} />
+      )}
+
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen} 
+        listeners={{ tabPress: handleAuthGuard }}
+      />
     </Tab.Navigator>
   );
 }
 
 function Navigation() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) return null;
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!user ? (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="Main" component={MainTabNavigator} />
-            <Stack.Screen 
-              name="Detail" 
-              component={DetailScreen} 
-              options={{ 
-                headerShown: true, 
-                headerStyle: { backgroundColor: '#5D4037' }, 
-                headerTintColor: '#F5E6C8',
-                headerTitle: 'FILE DETAIL' 
-              }} 
-            />
-          </>
-        )}
+        <Stack.Screen name="Main" component={MainTabNavigator} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen 
+          name="Detail" 
+          component={DetailScreen} 
+          options={{ 
+            headerShown: true, 
+            headerStyle: { backgroundColor: '#5D4037' }, 
+            headerTintColor: '#F5E6C8',
+            headerTitle: 'FILE DETAIL' 
+          }} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
