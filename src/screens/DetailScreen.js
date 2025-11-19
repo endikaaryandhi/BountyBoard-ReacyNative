@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../config/api';
@@ -82,10 +82,20 @@ export default function DetailScreen({ route, navigation }) {
         <Text style={styles.descLabel}>DESCRIPTION:</Text>
         <Text style={styles.description}>{bounty.description}</Text>
 
-        {role === 'admin' && bounty.status === 'wanted' && (
-            <TouchableOpacity style={styles.captureBtn} onPress={() => updateStatus('captured')}>
-                <Text style={styles.btnText}>MARK AS CAPTURED</Text>
-            </TouchableOpacity>
+        {role === 'admin' && (
+          <>
+            {bounty.status === 'wanted' && (
+              <TouchableOpacity style={styles.captureBtn} onPress={() => updateStatus('captured')}>
+                  <Text style={styles.btnText}>MARK AS CAPTURED</Text>
+              </TouchableOpacity>
+            )}
+
+            {bounty.status === 'captured' && (
+              <TouchableOpacity style={styles.revokeBtn} onPress={() => updateStatus('wanted')}>
+                  <Text style={styles.btnText}>REVOKE CAPTURE</Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
         
         {bounty.status === 'captured' && (
@@ -129,6 +139,7 @@ const styles = StyleSheet.create({
   descLabel: { marginTop: 15, fontWeight: 'bold', color: '#5D4037', opacity: 0.7, fontSize: 12 },
   description: { backgroundColor: 'rgba(0,0,0,0.05)', padding: 10, borderRadius: 4, marginTop: 5, fontStyle: 'italic', color: '#5D4037' },
   captureBtn: { backgroundColor: '#D32F2F', padding: 15, borderRadius: 4, marginTop: 20, alignItems: 'center', borderWidth: 2, borderColor: 'black' },
+  revokeBtn: { backgroundColor: '#5D4037', padding: 15, borderRadius: 4, marginTop: 20, alignItems: 'center', borderWidth: 2, borderColor: 'black' },
   btnText: { color: 'white', fontWeight: 'bold', letterSpacing: 1 },
   editBtn: { marginTop: 15, backgroundColor: '#5D4037', padding: 12, alignItems: 'center', borderRadius: 4 },
   editBtnText: { color: '#F5E6C8', fontWeight: 'bold' },

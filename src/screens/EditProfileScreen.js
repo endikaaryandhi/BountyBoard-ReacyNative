@@ -12,8 +12,9 @@ export default function EditProfileScreen({ navigation }) {
     setLoading(true);
     try {
       await updateProfile({ full_name: fullName, avatar_url: avatarUrl });
-      Alert.alert('Success', 'ID Card Updated');
-      navigation.goBack();
+      Alert.alert('Success', 'ID Card Updated', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile');
     } finally {

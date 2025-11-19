@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,6 +15,7 @@ import DetailScreen from './src/screens/DetailScreen';
 import ApprovalScreen from './src/screens/ApprovalScreen';
 import EditBountyScreen from './src/screens/EditBountyScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import SplashScreen from './src/components/SplashScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -72,7 +73,7 @@ function MainTabNavigator({ navigation }) {
   );
 }
 
-function Navigation() {
+function RootNavigation() {
   const { loading } = useAuth();
 
   if (loading) return null;
@@ -119,9 +120,15 @@ function Navigation() {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   return (
     <AuthProvider>
-      <Navigation />
+      <RootNavigation />
     </AuthProvider>
   );
 }

@@ -61,7 +61,7 @@ export default function ProfileScreen({ navigation }) {
         )}
       </View>
       
-      <Text style={styles.version}>System v2.2 Mobile</Text>
+      <Text style={styles.version}>Endika Aryandhi - Kelompok 27</Text>
     </View>
   );
 }
@@ -81,5 +81,5 @@ const styles = StyleSheet.create({
   logoutText: { color: '#D32F2F', fontWeight: 'bold' },
   loginBtn: { marginTop: 20, padding: 15, width: '100%', alignItems: 'center', backgroundColor: '#5D4037', borderRadius: 4 },
   loginText: { color: '#F5E6C8', fontWeight: 'bold', letterSpacing: 1 },
-  version: { textAlign: 'center', color: '#F5E6C8', marginTop: 20, opacity: 0.5, fontSize: 10 }
+  version: { textAlign: 'center', color: '#F5E6C8', marginTop: 20, opacity: 0.5, fontSize: 12, fontStyle: 'italic' }
 });
