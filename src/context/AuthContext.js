@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         await fetchRole(session.user.id);
       } else {
         setUser(null);
-        setRole(null);
+        setRole('guest');
       }
       setLoading(false);
     };
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
           await fetchRole(session.user.id);
         } else {
           setUser(null);
-          setRole(null);
+          setRole('guest');
         }
         setLoading(false);
       }
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    setRole(null);
+    setRole('guest');
   };
 
   const updateProfile = async (updates) => {

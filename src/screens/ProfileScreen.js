@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -7,7 +7,12 @@ export default function ProfileScreen({ navigation }) {
   const { user, role, signOut } = useAuth();
 
   const handleLogout = async () => {
-    await signOut();
+    try {
+      await signOut();
+      Alert.alert('Success', 'Logged out successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to log out');
+    }
   };
 
   return (
@@ -15,37 +20,48 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.card}>
         <View style={styles.avatarContainer}>
             <Image 
-                source={{ uri: user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/adventurer/png?seed=${user?.email}` }} 
+                source={{ uri: user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/adventurer/png?seed=${user?.email || 'guest'}` }} 
                 style={styles.avatar} 
             />
         </View>
         
-        <Text style={styles.name}>{user?.user_metadata?.full_name || 'Unknown Hunter'}</Text>
+        <Text style={styles.name}>{user ? (user.user_metadata?.full_name || 'Unknown Hunter') : 'Guest Hunter'}</Text>
         
         <View style={styles.infoBox}>
             <Text style={styles.label}>EMAIL</Text>
-            <Text style={styles.value}>{user?.email}</Text>
+            <Text style={styles.value}>{user?.email || 'Not Logged In'}</Text>
         </View>
 
         <View style={styles.infoBox}>
             <Text style={styles.label}>ROLE</Text>
-            <Text style={styles.value}>{role?.toUpperCase()}</Text>
+            <Text style={styles.value}>{role?.toUpperCase() || 'GUEST'}</Text>
         </View>
 
-        <TouchableOpacity 
-            style={styles.editBtn}
-            onPress={() => navigation.navigate('EditProfile')}
-        >
-            <Ionicons name="create-outline" size={20} color="#F5E6C8" style={{marginRight: 8}}/>
-            <Text style={styles.editBtnText}>EDIT ID CARD</Text>
-        </TouchableOpacity>
+        {user ? (
+          <>
+            <TouchableOpacity 
+                style={styles.editBtn}
+                onPress={() => navigation.navigate('EditProfile')}
+            >
+                <Ionicons name="create-outline" size={20} color="#F5E6C8" style={{marginRight: 8}}/>
+                <Text style={styles.editBtnText}>EDIT ID CARD</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>RESIGN (LOGOUT)</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                <Text style={styles.logoutText}>RESIGN (LOGOUT)</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity 
+              style={styles.loginBtn} 
+              onPress={() => navigation.navigate('Login')}
+          >
+              <Text style={styles.loginText}>LOGIN TO GUILD</Text>
+          </TouchableOpacity>
+        )}
       </View>
       
-      <Text style={styles.version}>System v2.1 Mobile</Text>
+      <Text style={styles.version}>System v2.2 Mobile</Text>
     </View>
   );
 }
@@ -63,5 +79,7 @@ const styles = StyleSheet.create({
   editBtnText: { color: '#F5E6C8', fontWeight: 'bold' },
   logoutBtn: { marginTop: 15, padding: 10, width: '100%', alignItems: 'center', backgroundColor: 'rgba(211, 47, 47, 0.1)', borderRadius: 4 },
   logoutText: { color: '#D32F2F', fontWeight: 'bold' },
+  loginBtn: { marginTop: 20, padding: 15, width: '100%', alignItems: 'center', backgroundColor: '#5D4037', borderRadius: 4 },
+  loginText: { color: '#F5E6C8', fontWeight: 'bold', letterSpacing: 1 },
   version: { textAlign: 'center', color: '#F5E6C8', marginTop: 20, opacity: 0.5, fontSize: 10 }
 });

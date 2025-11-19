@@ -67,11 +67,7 @@ function MainTabNavigator({ navigation }) {
         <Tab.Screen name="Approval" component={ApprovalScreen} />
       )}
 
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        listeners={{ tabPress: handleAuthGuard }}
-      />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }

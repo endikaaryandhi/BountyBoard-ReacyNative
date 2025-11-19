@@ -17,6 +17,10 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     try {
       await signIn(email, password);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
     } catch (error) {
       Alert.alert('Login Failed', 'Invalid email or password');
     } finally {
@@ -31,7 +35,7 @@ export default function LoginScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#5D4037"
+          placeholderTextColor="#8D6E63"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -39,7 +43,7 @@ export default function LoginScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#5D4037"
+          placeholderTextColor="#8D6E63"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
