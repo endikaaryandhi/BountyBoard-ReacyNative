@@ -1,11 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { API_URL } from '../config/api';
 import BountyCard from '../components/BountyCard';
+import { BountyService } from '../services/bountyService'; 
 
 export default function ApprovalScreen({ navigation }) {
   const [bounties, setBounties] = useState([]);
@@ -13,8 +12,8 @@ export default function ApprovalScreen({ navigation }) {
 
   const fetchPending = async () => {
     try {
-      const res = await axios.get(API_URL);
-      const pending = res.data.filter(b => b.status === 'pending');
+      const data = await BountyService.getAll();
+      const pending = data.filter(b => b.status === 'pending');
       setBounties(pending);
     } catch (err) {
       console.log(err);
@@ -43,11 +42,12 @@ export default function ApprovalScreen({ navigation }) {
           text: 'Confirm',
           onPress: async () => {
             try {
-              await axios.put(`${API_URL}/${id}/status`, { status });
+              // Clean Code: Update via Service
+              await BountyService.updateStatus(id, status);
               Alert.alert('Success', `Bounty ${status === 'wanted' ? 'Approved' : 'Rejected'}`);
               fetchPending();
             } catch (error) {
-              Alert.alert('Error', 'Action failed');
+              console.log("Update error:", error);
             }
           }
         }
@@ -58,23 +58,14 @@ export default function ApprovalScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <View style={styles.wrapper}>
       <View style={styles.actionButtons}>
-         <TouchableOpacity 
-           style={[styles.btn, styles.btnReject]} 
-           onPress={() => handleAction(item.id, 'rejected')}
-         >
+         <TouchableOpacity style={[styles.btn, styles.btnReject]} onPress={() => handleAction(item.id, 'rejected')}>
             <Ionicons name="close" size={28} color="white" />
          </TouchableOpacity>
-         
-         <TouchableOpacity 
-           style={[styles.btn, styles.btnApprove]} 
-           onPress={() => handleAction(item.id, 'wanted')}
-         >
+         <TouchableOpacity style={[styles.btn, styles.btnApprove]} onPress={() => handleAction(item.id, 'wanted')}>
             <Ionicons name="checkmark" size={28} color="white" />
          </TouchableOpacity>
       </View>
-
       <BountyCard item={item} onPress={null} />
-      
       <View style={styles.badgeContainer}>
          <View style={styles.badge}>
            <Ionicons name="alert-circle" size={16} color="white" style={{marginRight: 4}}/>
@@ -109,53 +100,13 @@ const styles = StyleSheet.create({
   list: { padding: 16, paddingTop: 30 },
   centerEmpty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   wrapper: { position: 'relative', marginBottom: 20 },
-  actionButtons: {
-    position: 'absolute',
-    top: -15,
-    right: -10,
-    flexDirection: 'row',
-    zIndex: 20,
-    gap: 10,
-  },
-  btn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 6,
-  },
+  actionButtons: { position: 'absolute', top: -15, right: -10, flexDirection: 'row', zIndex: 20, gap: 10 },
+  btn: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'white', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 6 },
   btnReject: { backgroundColor: '#D32F2F' },
   btnApprove: { backgroundColor: '#388E3C' },
-  badgeContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 20,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9A825',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#FFF',
-  },
-  badgeText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
+  badgeContainer: { position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center', zIndex: 20 },
+  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9A825', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 2, borderColor: '#FFF' },
+  badgeText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   emptyBox: { alignItems: 'center', opacity: 0.6 },
   emptyText: { color: '#F5E6C8', marginTop: 10, fontSize: 24, fontWeight: 'bold', fontFamily: 'serif' },
   emptySubText: { color: '#F5E6C8', marginTop: 5, fontSize: 16, fontStyle: 'italic' }

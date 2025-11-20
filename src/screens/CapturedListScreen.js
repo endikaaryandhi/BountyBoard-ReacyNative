@@ -1,11 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { API_URL } from '../config/api';
 import BountyCard from '../components/BountyCard';
+import { BountyService } from '../services/bountyService'; 
 
 export default function CapturedListScreen({ navigation }) {
   const [bounties, setBounties] = useState([]);
@@ -14,11 +13,11 @@ export default function CapturedListScreen({ navigation }) {
 
   const fetchBounties = async () => {
     try {
-      const res = await axios.get(API_URL);
-      const captured = res.data.filter(b => b.status === 'captured');
+      const data = await BountyService.getAll(); 
+      const captured = data.filter(b => b.status === 'captured');
       setBounties(captured);
     } catch (err) {
-      console.log(err);
+      console.log('Gagal mengambil data:', err.message);
     }
   };
 
@@ -69,38 +68,14 @@ export default function CapturedListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#2e2622',
-  },
+  container: { flex: 1, backgroundColor: '#2e2622' },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5E6C8',
-    margin: 16,
-    marginBottom: 5,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#5D4037',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5E6C8',
+    margin: 16, marginBottom: 5, paddingHorizontal: 12, borderRadius: 4,
+    borderWidth: 2, borderColor: '#5D4037',
   },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 45,
-    color: '#5D4037',
-    fontWeight: 'bold',
-  },
-  list: {
-    padding: 16,
-  },
-  emptyText: {
-    color: '#F5E6C8',
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    opacity: 0.7,
-  }
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, height: 45, color: '#5D4037', fontWeight: 'bold' },
+  list: { padding: 16 },
+  emptyText: { color: '#F5E6C8', textAlign: 'center', marginTop: 50, fontSize: 16, opacity: 0.7 }
 });

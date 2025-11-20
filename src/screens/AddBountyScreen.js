@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
-import { API_URL } from '../config/api';
 import { supabase } from '../config/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { BountyService } from '../services/bountyService'; 
 
 export default function AddBountyScreen({ navigation }) {
   const { role } = useAuth();
@@ -14,13 +13,8 @@ export default function AddBountyScreen({ navigation }) {
   const [uploading, setUploading] = useState(false);
   const [imageUri, setImageUri] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    alias: '',
-    crime: '',
-    bounty_amount: '',
-    last_seen: '',
-    description: '',
-    image_url: '',
+    name: '', alias: '', crime: '', bounty_amount: '',
+    last_seen: '', description: '', image_url: '',
     status: role === 'admin' ? 'wanted' : 'pending'
   });
 
@@ -28,14 +22,9 @@ export default function AddBountyScreen({ navigation }) {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 1,
+        allowsEditing: true, aspect: [3, 4], quality: 1,
       });
-
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-      }
+      if (!result.canceled) setImageUri(result.assets[0].uri);
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
     }
@@ -43,32 +32,18 @@ export default function AddBountyScreen({ navigation }) {
 
   const uploadImage = async () => {
     if (!imageUri) return '';
-
     try {
       setUploading(true);
       const ext = imageUri.substring(imageUri.lastIndexOf('.') + 1);
       const fileName = `bounty-${Date.now()}.${ext}`;
-      
-      const formData = new FormData();
-      formData.append('file', {
-        uri: imageUri,
-        name: fileName,
-        type: `image/${ext}`
-      });
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', { uri: imageUri, name: fileName, type: `image/${ext}` });
 
-      const { data, error } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, formData, {
-          contentType: `image/${ext}`,
-        });
-
+      const { error } = await supabase.storage.from('avatars').upload(fileName, formDataUpload, { contentType: `image/${ext}` });
       if (error) throw error;
 
-      const { data: publicData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      return publicData.publicUrl;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      return data.publicUrl;
     } catch (error) {
       Alert.alert('Upload Failed', error.message);
       return null;
@@ -77,9 +52,7 @@ export default function AddBountyScreen({ navigation }) {
     }
   };
 
-  const handleChange = (key, value) => {
-    setFormData({ ...formData, [key]: value });
-  };
+  const handleChange = (key, value) => setFormData({ ...formData, [key]: value });
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.crime || !formData.bounty_amount) {
@@ -90,17 +63,12 @@ export default function AddBountyScreen({ navigation }) {
     setLoading(true);
     try {
       let finalImageUrl = formData.image_url;
-      
       if (imageUri) {
-        const uploadedUrl = await uploadImage();
-        if (!uploadedUrl) {
-          setLoading(false);
-          return;
-        }
-        finalImageUrl = uploadedUrl;
+        finalImageUrl = await uploadImage();
+        if (!finalImageUrl) { setLoading(false); return; }
       }
 
-      await axios.post(API_URL, { ...formData, image_url: finalImageUrl });
+      await BountyService.create({ ...formData, image_url: finalImageUrl });
       
       Alert.alert('Success', 'Bounty posted successfully!', [
         { text: 'OK', onPress: () => navigation.navigate('Wanted') }
@@ -114,7 +82,7 @@ export default function AddBountyScreen({ navigation }) {
       setImageUri(null);
 
     } catch (error) {
-      Alert.alert('Error', 'Failed to post bounty');
+       console.log(error);
     } finally {
       setLoading(false);
     }
@@ -159,18 +127,14 @@ export default function AddBountyScreen({ navigation }) {
             style={[styles.input, styles.textArea]} 
             value={formData.description} 
             onChangeText={v => handleChange('description', v)} 
-            multiline={true} 
-            numberOfLines={4} 
-            placeholder="Physical traits, dangerous, etc."
-            placeholderTextColor="#8D6E63"
+            multiline={true} numberOfLines={4} 
+            placeholder="Physical traits, dangerous, etc." placeholderTextColor="#8D6E63"
           />
 
           <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading || uploading}>
-            {loading || uploading ? (
-              <ActivityIndicator color="#F5E6C8" />
-            ) : (
+            {loading || uploading ? <ActivityIndicator color="#F5E6C8" /> : 
               <Text style={styles.buttonText}>{role === 'admin' ? 'PUBLISH NOW' : 'SUBMIT REQUEST'}</Text>
-            )}
+            }
           </TouchableOpacity>
         </View>
       </ScrollView>

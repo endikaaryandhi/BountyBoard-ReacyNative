@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
-import { API_URL } from '../config/api';
 import { supabase } from '../config/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { BountyService } from '../services/bountyService'; // Import Service
 
 export default function EditBountyScreen({ route, navigation }) {
   const { id } = route.params;
@@ -17,29 +16,27 @@ export default function EditBountyScreen({ route, navigation }) {
   });
 
   useEffect(() => {
-    axios.get(`${API_URL}/${id}`)
-      .then(res => {
-        setFormData(res.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        Alert.alert('Error', 'Failed to load data');
-        navigation.goBack();
-      });
+    const loadData = async () => {
+        try {
+            // Clean Code: Get By ID via Service
+            const data = await BountyService.getById(id);
+            setFormData(data);
+        } catch (error) {
+            navigation.goBack();
+        } finally {
+            setLoading(false);
+        }
+    };
+    loadData();
   }, [id]);
 
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 1,
+        allowsEditing: true, aspect: [3, 4], quality: 1,
       });
-
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-      }
+      if (!result.canceled) setImageUri(result.assets[0].uri);
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
     }
@@ -47,22 +44,13 @@ export default function EditBountyScreen({ route, navigation }) {
 
   const uploadImage = async () => {
     if (!imageUri) return formData.image_url;
-
     try {
       const ext = imageUri.substring(imageUri.lastIndexOf('.') + 1);
       const fileName = `bounty-${Date.now()}.${ext}`;
-      
       const formDataUpload = new FormData();
-      formDataUpload.append('file', {
-        uri: imageUri,
-        name: fileName,
-        type: `image/${ext}`
-      });
+      formDataUpload.append('file', { uri: imageUri, name: fileName, type: `image/${ext}` });
 
-      const { error } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, formDataUpload, { contentType: `image/${ext}` });
-
+      const { error } = await supabase.storage.from('avatars').upload(fileName, formDataUpload, { contentType: `image/${ext}` });
       if (error) throw error;
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
@@ -72,9 +60,7 @@ export default function EditBountyScreen({ route, navigation }) {
     }
   };
 
-  const handleChange = (key, value) => {
-    setFormData({ ...formData, [key]: value });
-  };
+  const handleChange = (key, value) => setFormData({ ...formData, [key]: value });
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -84,13 +70,15 @@ export default function EditBountyScreen({ route, navigation }) {
         finalImageUrl = await uploadImage();
       }
 
-      await axios.put(`${API_URL}/${id}`, { ...formData, image_url: finalImageUrl });
+      // Clean Code: Update via Service
+      await BountyService.updateDetails(id, { ...formData, image_url: finalImageUrl });
       
       Alert.alert('Success', 'Dossier updated successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Update failed');
+       // Error handled implicitly or by interceptor
+       console.log(error);
     } finally {
       setSubmitting(false);
     }
@@ -118,34 +106,29 @@ export default function EditBountyScreen({ route, navigation }) {
 
           <Text style={styles.label}>Target Name</Text>
           <TextInput style={styles.input} value={formData.name} onChangeText={v => handleChange('name', v)} />
-
+          
           <Text style={styles.label}>Alias</Text>
           <TextInput style={styles.input} value={formData.alias} onChangeText={v => handleChange('alias', v)} />
-
+          
           <Text style={styles.label}>Crime</Text>
           <TextInput style={styles.input} value={formData.crime} onChangeText={v => handleChange('crime', v)} />
-
+          
           <Text style={styles.label}>Reward Amount ($)</Text>
           <TextInput style={styles.input} value={String(formData.bounty_amount)} onChangeText={v => handleChange('bounty_amount', v)} keyboardType="numeric" />
-
+          
           <Text style={styles.label}>Last Seen Location</Text>
           <TextInput style={styles.input} value={formData.last_seen} onChangeText={v => handleChange('last_seen', v)} />
-
+          
           <Text style={styles.label}>Description</Text>
           <TextInput 
             style={[styles.input, styles.textArea]} 
             value={formData.description} 
             onChangeText={v => handleChange('description', v)} 
-            multiline={true} 
-            numberOfLines={4} 
+            multiline={true} numberOfLines={4} 
           />
 
           <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={submitting}>
-            {submitting ? (
-              <ActivityIndicator color="#F5E6C8" />
-            ) : (
-              <Text style={styles.buttonText}>SAVE CHANGES</Text>
-            )}
+            {submitting ? <ActivityIndicator color="#F5E6C8" /> : <Text style={styles.buttonText}>SAVE CHANGES</Text>}
           </TouchableOpacity>
         </View>
       </ScrollView>

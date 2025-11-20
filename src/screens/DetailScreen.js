@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
-import { API_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
+import { BountyService } from '../services/bountyService'; 
 
 export default function DetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -12,12 +11,16 @@ export default function DetailScreen({ route, navigation }) {
   const [bounty, setBounty] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchDetails = () => {
+  const fetchDetails = async () => {
     setLoading(true);
-    axios.get(`${API_URL}/${id}`)
-      .then(res => setBounty(res.data))
-      .catch(err => Alert.alert('Error', 'Could not load bounty details'))
-      .finally(() => setLoading(false));
+    try {
+      const data = await BountyService.getById(id);
+      setBounty(data);
+    } catch (err) {
+      navigation.goBack();
+    } finally {
+      setLoading(false);
+    }
   };
 
   useFocusEffect(
@@ -26,13 +29,13 @@ export default function DetailScreen({ route, navigation }) {
     }, [id])
   );
 
-  const updateStatus = (newStatus) => {
-    axios.put(`${API_URL}/${id}/status`, { status: newStatus })
-      .then(() => {
-        Alert.alert('Success', newStatus === 'captured' ? 'Target Captured!' : 'Status Updated');
-        fetchDetails();
-      })
-      .catch(() => Alert.alert('Error', 'Failed to update status'));
+  const updateStatus = async (newStatus) => {
+    try {
+      await BountyService.updateStatus(id, newStatus);
+      Alert.alert('Success', newStatus === 'captured' ? 'Target Captured!' : 'Status Updated');
+      fetchDetails();
+    } catch (error) {
+    }
   };
 
   const deleteBounty = () => {
@@ -41,10 +44,12 @@ export default function DetailScreen({ route, navigation }) {
       { 
         text: 'Delete', 
         style: 'destructive', 
-        onPress: () => {
-            axios.delete(`${API_URL}/${id}`)
-            .then(() => navigation.goBack())
-            .catch(() => Alert.alert('Error', 'Failed to delete'));
+        onPress: async () => {
+          try {
+            await BountyService.delete(id);
+            navigation.goBack();
+          } catch (error) {
+          }
         }
       }
     ]);
@@ -59,6 +64,7 @@ export default function DetailScreen({ route, navigation }) {
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.paper}>
+          {/* Image Section */}
           <View style={styles.imageWrapper}>
             <Image 
               source={{ uri: bounty.image_url || 'https://placehold.co/400x500/2e2622/F5E6C8?text=CONFIDENTIAL' }} 
@@ -71,6 +77,7 @@ export default function DetailScreen({ route, navigation }) {
             )}
           </View>
           
+          {/* Details Section */}
           <Text style={styles.nameContainer}>
             <Text style={styles.name}>{bounty.name}</Text>
             {bounty.alias ? <Text style={styles.alias}> ({bounty.alias})</Text> : null}
@@ -92,6 +99,7 @@ export default function DetailScreen({ route, navigation }) {
           <Text style={styles.descLabel}>DESCRIPTION:</Text>
           <Text style={styles.description}>{bounty.description}</Text>
 
+          {/* Admin Actions */}
           {role === 'admin' && (
             <>
               {bounty.status === 'wanted' && (

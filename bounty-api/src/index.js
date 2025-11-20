@@ -1,0 +1,27 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import bountyRoutes from './routes/bountyRoutes.js';
+
+dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
+}));
+
+app.use(express.json());
+
+app.get('/', (req, res) => res.send('Bounty API is running!'));
+
+app.use('/api/bounties', bountyRoutes);
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server berjalan di port ${PORT}`);
+    });
+}
+
+export default app;
